@@ -17,4 +17,7 @@ enum NotchPanelStyle {
 
 extension EnvironmentValues {
     @Entry var notchPanelStyle: NotchPanelStyle = .notch
+    /// True when a pill-style panel is parked over the hardware camera island, so
+    /// content near the panel's top edge needs clearance like it does under a notch.
+    @Entry var notchPanelCoversIsland: Bool = false
 }

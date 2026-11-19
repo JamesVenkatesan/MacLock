@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import AppKit
 import Observation
 
 /// How long the Touch-ID-unlocked session may sit idle before it re-locks.
@@ -95,9 +96,46 @@ enum UnlockTrigger: String, CaseIterable, Identifiable {
     }
 }
 
+/// Which camera cutout the built-in display has. `.dynamicIsland` is for the OLED
+/// MacBook Pro, whose camera sits in a floating hole-punch island below the top edge
+/// rather than a notch attached to it. `.auto` picks the island when the built-in
+/// cutout measures narrower than `NotchGeometry.islandAutoDetectMaxWidth`, else
+/// keeps the original notch behaviour; `.notch` always keeps the original behaviour.
+enum CameraCutoutMode: String, CaseIterable, Identifiable {
+    case auto
+    case notch
+    case dynamicIsland
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .auto: return "Automatic"
+        case .notch: return "Notch"
+        case .dynamicIsland: return "Dynamic Island"
+        }
+    }
+
+    /// Read straight from `UserDefaults` so nonisolated geometry code can use it.
+    static var current: CameraCutoutMode {
+        UserDefaults.standard.string(forKey: GlanceSettings.cameraCutoutModeKey)
+            .flatMap(CameraCutoutMode.init(rawValue:)) ?? .auto
+    }
+}
+
 @Observable
 @MainActor
 final class GlanceSettings {
+    nonisolated static let cameraCutoutModeKey = "GlanceSettings.cameraCutoutMode"
+
+    /// Changing this re-measures the overlay geometry via the screen-change hook.
+    var cameraCutoutMode: CameraCutoutMode {
+        didSet {
+            defaults.set(cameraCutoutMode.rawValue, forKey: Self.cameraCutoutModeKey)
+            NotificationCenter.default.post(name: NSApplication.didChangeScreenParametersNotification, object: nil)
+        }
+    }
+
     static let shared = GlanceSettings()
 
     private enum Key {
@@ -331,6 +369,8 @@ final class GlanceSettings {
             ?? 5
         autoRetryOnce = defaults.object(forKey: Key.autoRetryOnce) as? Bool ?? false
         hapticFeedbackEnabled = defaults.object(forKey: Key.hapticFeedbackEnabled) as? Bool ?? true
+        cameraCutoutMode = defaults.string(forKey: Self.cameraCutoutModeKey)
+            .flatMap(CameraCutoutMode.init(rawValue:)) ?? .auto
         // Keep the icon available for existing and new installs unless the
         // user explicitly opts into the background-only mode.
         showsInMenuBar = defaults.object(forKey: Key.showsInMenuBar) as? Bool ?? true

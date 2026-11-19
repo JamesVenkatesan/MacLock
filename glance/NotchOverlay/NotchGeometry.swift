@@ -13,8 +13,18 @@ struct NotchGeometry {
     let closedSize: CGSize
     /// True if this screen has a real physical notch (vs. the pill fallback).
     let isPhysicalNotch: Bool
+    /// True on displays whose camera sits in a floating hole-punch island
+    /// (OLED MacBook Pro). Drawn in pill style, but parked exactly over the
+    /// island and grown out of it in place instead of sliding in from offscreen.
+    var isHardwareIsland: Bool = false
 
     var style: NotchPanelStyle { isPhysicalNotch ? .notch : .pill }
+
+    /// Gap between the screen's top edge and the panel's top edge in pill style.
+    var topGap: CGFloat { isHardwareIsland ? Self.islandTopGap : Self.pillTopGap }
+
+    /// Horizontal shift from the screen's centre; zero except over the hardware island.
+    var horizontalOffset: CGFloat { isHardwareIsland ? Self.islandHorizontalOffset : 0 }
 
     /// Fixed footprint of expanded scan-mode content in notch style. Sized for the
     /// square (432x432) scan animation plus breathing room. Pill has its own `pillOpenSize`.
@@ -63,6 +73,32 @@ struct NotchGeometry {
     static let pillContentPaddingLeading: CGFloat = 32
     static let pillContentPaddingTrailing: CGFloat = 32
     static let pillContentPaddingBottom: CGFloat = 32
+
+    // MARK: - Hardware Dynamic Island (OLED MacBook Pro) — EDIT HERE
+    //
+    // The closed panel must sit exactly on top of the black camera island so the
+    // expansion reads as coming out of it. AppKit reports the island's width and
+    // horizontal position (via the menu-bar auxiliary areas) but not its height or
+    // vertical offset — `safeAreaInsets.top` is the whole menu-bar band around it.
+    // Measured on a 16-inch OLED MacBook Pro (Mac17,10) at default scaling: 70pt-wide
+    // cutout, centred, inside a 47.5pt band. Tune height/gap by eye if it doesn't line up.
+
+    /// Resting size of the island, in points. Width is only a fallback for when the
+    /// measured cutout width is unavailable or implausible.
+    static let islandClosedSize = CGSize(width: 70, height: 32)
+    /// Distance from the top of the screen to the top of the island, in points.
+    /// Started from centring `islandClosedSize.height` in the measured 47.5pt band
+    /// ((47.5 - 32) / 2 ≈ 8), then nudged up by eye on the hardware.
+    static let islandTopGap: CGFloat = 6
+    /// Horizontal nudge (positive = right) from the measured cutout centre, tuned by eye —
+    /// AppKit's auxiliary areas sat the panel slightly left of the physical island.
+    static let islandHorizontalOffset: CGFloat = 2
+    /// If AppKit reports the cutout's width through the menu-bar auxiliary areas
+    /// and the value falls in this range, it's used instead of `islandClosedSize.width`.
+    static let islandMeasuredWidthRange: ClosedRange<CGFloat> = 60...220
+    /// `CameraCutoutMode.auto` treats a built-in cutout narrower than this as an island.
+    /// Notches measure ~170–200pt across scaled resolutions; the island ~70–85pt.
+    static let islandAutoDetectMaxWidth: CGFloat = 120
 
     // MARK: - Panel open/close springs — EDIT HERE
     //
@@ -183,8 +219,9 @@ struct NotchGeometry {
             let contentHeight = max(pillOpenSize.height, OnboardingMetrics.maxPanelHeight(for: .pill))
             return CGSize(
                 width: contentWidth + pillShadowPadding * 2 + hoverBump,
-                // `pillTopGap` since the detached pill's panel is pushed down by that much.
-                height: contentHeight + pillShadowPadding + hoverBump + pillTopGap
+                // The detached pill's panel is pushed down by its top gap; reserve
+                // room for whichever gap (floating pill or hardware island) is larger.
+                height: contentHeight + pillShadowPadding + hoverBump + max(pillTopGap, islandTopGap)
             )
         }
     }
@@ -197,6 +234,9 @@ struct NotchGeometry {
     }
 
     static func forScreen(_ screen: NSScreen) -> NotchGeometry {
+        if usesHardwareIsland(screen) {
+            return islandGeometry(for: screen)
+        }
         guard screen.safeAreaInsets.top > 0 else {
             return NotchGeometry(closedSize: pillClosedSize, isPhysicalNotch: false)
         }
@@ -214,6 +254,39 @@ struct NotchGeometry {
         return NotchGeometry(closedSize: CGSize(width: width, height: height), isPhysicalNotch: true)
     }
 
+    /// Width of the camera cutout, derived from the menu-bar areas flanking it — nil on
+    /// displays without one (no top safe-area inset, so AppKit reports no auxiliary areas).
+    static func measuredCutoutWidth(for screen: NSScreen) -> CGFloat? {
+        guard screen.safeAreaInsets.top > 0,
+              let left = screen.auxiliaryTopLeftArea?.width,
+              let right = screen.auxiliaryTopRightArea?.width else { return nil }
+        return screen.frame.width - left - right
+    }
+
+    /// Whether `screen` gets island geometry. Only the built-in display has a camera
+    /// cutout; `.auto` picks the island when the cutout is too narrow to be a notch.
+    static func usesHardwareIsland(_ screen: NSScreen) -> Bool {
+        guard screen.isBuiltIn else { return false }
+        switch CameraCutoutMode.current {
+        case .dynamicIsland: return true
+        case .notch: return false
+        case .auto:
+            guard let width = measuredCutoutWidth(for: screen) else { return false }
+            return width > 0 && width < islandAutoDetectMaxWidth
+        }
+    }
+
+    /// Pill-style geometry parked over the hardware island. Width comes from the
+    /// menu-bar auxiliary areas when AppKit reports a plausible cutout width there,
+    /// otherwise from `islandClosedSize`.
+    static func islandGeometry(for screen: NSScreen) -> NotchGeometry {
+        var size = islandClosedSize
+        if let measured = measuredCutoutWidth(for: screen), islandMeasuredWidthRange.contains(measured) {
+            size.width = measured
+        }
+        return NotchGeometry(closedSize: size, isPhysicalNotch: false, isHardwareIsland: true)
+    }
+
     /// Picks the screen the overlay should show on. If a display is pinned
     /// (`GlanceSettings.preferredDisplayID`), it's used only if still connected — no
     /// fallback. Otherwise: the physical notch if any display has one, else the primary screen.
@@ -222,7 +295,9 @@ struct NotchGeometry {
         if let targetID = GlanceSettings.shared.preferredDisplayID {
             return NSScreen.screens.first { $0.stableDisplayID == targetID }
         }
-        return NSScreen.screens.first { $0.safeAreaInsets.top > 0 } ?? NSScreen.main
+        return NSScreen.screens.first { $0.safeAreaInsets.top > 0 }
+            ?? NSScreen.screens.first { usesHardwareIsland($0) }
+            ?? NSScreen.main
     }
 }
 

@@ -103,6 +103,8 @@ struct GeneralSettingsPage: View {
                 UnlockTriggerPicker(selection: $settings.unlockTriggers, isEnabled: coordinator.isEnabled)
                 SettingsGroupDivider()
                 displayPicker()
+
+                cameraCutoutPicker()
             }
             .onReceive(NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)) { _ in
                 screens = NSScreen.screens
@@ -219,6 +221,16 @@ struct GeneralSettingsPage: View {
                         settings.preferredDisplayID = screen.id
                         settings.preferredDisplayName = screen.name
                     }
+                }
+            }
+        }
+    }
+
+    private func cameraCutoutPicker() -> some View {
+        SettingsRowContent(title: "Camera cutout") {
+            SettingsMenuPickerPill(label: settings.cameraCutoutMode.title) {
+                ForEach(CameraCutoutMode.allCases) { mode in
+                    Button(mode.title) { settings.cameraCutoutMode = mode }
                 }
             }
         }

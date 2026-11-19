@@ -245,6 +245,7 @@ struct SelectCameraStepView: View {
 struct EnrollStepView: View {
     let controller: OnboardingController
     @Environment(\.notchPanelStyle) private var style
+    @Environment(\.notchPanelCoversIsland) private var coversIsland
 
     var body: some View {
         VStack(spacing: 0) {
@@ -271,8 +272,9 @@ struct EnrollStepView: View {
         !controller.enrollmentComplete && !controller.showCheckmark
     }
 
+    /// Island-covering pills clear the camera like the notch does.
     private var cameraTopPadding: CGFloat {
-        style == .pill
+        style == .pill && !coversIsland
             ? OnboardingMetrics.enrollCameraTopPaddingPill
             : OnboardingMetrics.enrollCameraTopPaddingNotch
     }

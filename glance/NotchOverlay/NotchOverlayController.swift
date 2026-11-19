@@ -120,8 +120,8 @@ final class NotchOverlayController {
         hasPrimedWindow = true // already shown+rendered while closed, same effect as primeWindowIfNeeded
         updateInteractivity()
 
-        guard geometry.style == .pill else {
-            // The notch silhouette has nowhere to travel from — it's on top of hardware already there.
+        guard geometry.style == .pill, !geometry.isHardwareIsland else {
+            // The notch silhouette (or hardware island) has nowhere to travel from — it's on top of hardware already there.
             isPillDocked = true
             return
         }

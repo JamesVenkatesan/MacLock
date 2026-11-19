@@ -121,8 +121,10 @@ enum OnboardingMetrics {
     static let pillContentTrailingInset: CGFloat = 30
     static let pillContentBottomInset: CGFloat = 36
 
-    static func titleTopInset(for style: NotchPanelStyle) -> CGFloat {
-        style == .pill ? pillTitleTopInset : titleTopInset
+    /// Over the hardware island the pill's top edge sits on the camera, just like the
+    /// notch's housing, so it borrows the notch's clearance instead of the pill's.
+    static func titleTopInset(for style: NotchPanelStyle, coversIsland: Bool = false) -> CGFloat {
+        style == .pill && !coversIsland ? pillTitleTopInset : titleTopInset
     }
 
     static func contentLeadingInset(for style: NotchPanelStyle) -> CGFloat {
@@ -263,11 +265,12 @@ private struct OnboardingContentHorizontalPadding: ViewModifier {
 
 private struct OnboardingContentPadding: ViewModifier {
     @Environment(\.notchPanelStyle) private var style
+    @Environment(\.notchPanelCoversIsland) private var coversIsland
 
     func body(content: Content) -> some View {
         content
             .onboardingContentHorizontalPadding()
-            .padding(.top, OnboardingMetrics.titleTopInset(for: style))
+            .padding(.top, OnboardingMetrics.titleTopInset(for: style, coversIsland: coversIsland))
             .padding(.bottom, OnboardingMetrics.contentBottomInset(for: style))
     }
 }

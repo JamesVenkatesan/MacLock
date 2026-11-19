@@ -67,6 +67,8 @@ struct NotchOverlayView: View {
     private var targetIsPositioned: Bool {
         if targetIsExpanded { return true }
         if style == .notch { return true }
+        // The hardware island is always there, so the panel never travels either.
+        if controller.geometry.isHardwareIsland { return true }
         return controller.isPillDocked
     }
 
@@ -164,12 +166,13 @@ struct NotchOverlayView: View {
         guard visualIsPositioned else {
             return -(closedBodySize.height + NotchGeometry.pillOffscreenSlack)
         }
-        return NotchGeometry.pillTopGap
+        return controller.geometry.topGap
     }
 
     /// So it resolves into focus as it slides down, rather than snapping in.
     private var panelBlur: CGFloat {
-        style == .pill && !visualIsPositioned ? NotchGeometry.pillEnterBlur : 0
+        style == .pill && !controller.geometry.isHardwareIsland && !visualIsPositioned
+            ? NotchGeometry.pillEnterBlur : 0
     }
 
     private var scanContentPaddingTop: CGFloat {
@@ -266,6 +269,7 @@ struct NotchOverlayView: View {
             .opacity(visualIsExpanded ? 1 : 0)
             .scaleEffect(visualIsExpanded ? 1 : 0.3)
             .environment(\.notchPanelStyle, style)
+            .environment(\.notchPanelCoversIsland, controller.geometry.isHardwareIsland)
         }
         .frame(width: currentSize.width, height: currentSize.height)
         .background(Color.black)
@@ -292,7 +296,7 @@ struct NotchOverlayView: View {
         .animation(expansionAnimation(entering: true), value: onboardingController?.panelSize)
         .blur(radius: panelBlur)
         // Applied after the shadow so both travel together, before `.onHover`.
-        .offset(y: verticalOffset)
+        .offset(x: controller.geometry.horizontalOffset, y: verticalOffset)
         .animation(.easeOut(duration: 0.18), value: isHovering)
         .onHover { hovering in
             isHovering = hovering
@@ -446,7 +450,8 @@ struct NotchOverlayView: View {
 
         // Pill doesn't start expanding until `pillEnterExpansionDelay` elapses, so
         // that's added on top here too.
-        let entryDelay = (style == .pill ? NotchGeometry.pillEnterExpansionDelay : 0)
+        let entryDelay = (style == .pill && !controller.geometry.isHardwareIsland
+                          ? NotchGeometry.pillEnterExpansionDelay : 0)
             + NotchGeometry.scanPulseStartDelay
         let half = NotchGeometry.scanPulseHalfCycleDuration
         let hold = NotchGeometry.scanPulseHoldDuration
