@@ -11,7 +11,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		601C493C300FFC8400D3DE9D /* glance.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = glance.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		601C493C300FFC8400D3DE9D /* MacLock.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacLock.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -58,7 +58,7 @@
 		601C493D300FFC8400D3DE9D /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				601C493C300FFC8400D3DE9D /* glance.app */,
+				601C493C300FFC8400D3DE9D /* MacLock.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -86,7 +86,7 @@
 				020486DA199A87C9F636359E /* Sparkle */,
 			);
 			productName = glance;
-			productReference = 601C493C300FFC8400D3DE9D /* glance.app */;
+			productReference = 601C493C300FFC8400D3DE9D /* MacLock.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -276,23 +276,25 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 4;
-				DEVELOPMENT_TEAM = 99KWT739F7;
+				DEVELOPMENT_TEAM = M862PL886J;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = glance/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MacLock;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
-				INFOPLIST_KEY_NSCameraUsageDescription = "glance uses the camera on-device to recognize your face for unlocking your Mac, and to let you enroll and preview your face in Settings.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "MacLock uses the camera on-device to recognize your face for unlocking your Mac, and to let you enroll and preview your face in Settings.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.2;
-				PRODUCT_BUNDLE_IDENTIFIER = com.jonathan.glance;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.jamesvenkatesan.maclock;
+				PRODUCT_MODULE_NAME = glance;
+				PRODUCT_NAME = MacLock;
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -312,23 +314,25 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 4;
-				DEVELOPMENT_TEAM = 99KWT739F7;
+				DEVELOPMENT_TEAM = M862PL886J;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = glance/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MacLock;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
-				INFOPLIST_KEY_NSCameraUsageDescription = "glance uses the camera on-device to recognize your face for unlocking your Mac, and to let you enroll and preview your face in Settings.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "MacLock uses the camera on-device to recognize your face for unlocking your Mac, and to let you enroll and preview your face in Settings.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.2;
-				PRODUCT_BUNDLE_IDENTIFIER = com.jonathan.glance;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.jamesvenkatesan.maclock;
+				PRODUCT_MODULE_NAME = glance;
+				PRODUCT_NAME = MacLock;
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
