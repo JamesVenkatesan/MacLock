@@ -160,6 +160,15 @@ debug section should appear in the sidebar.
 
 
 
+### Releasing
+
+`tools/make_release.sh` archives a Release build, signs it with Developer ID, packages
+`build/release/MacLock-<version>.dmg`, notarizes and staples it, and with `--publish`
+creates the GitHub release. It needs a paid Apple Developer Program membership; the
+one-time setup is described at the top of the script (`tools/make_release.sh --help`).
+
+
+
 ## Contributing
 
 Issues and feedback: [github.com/JamesVenkatesan/MacLock/issues](https://github.com/JamesVenkatesan/MacLock/issues).
